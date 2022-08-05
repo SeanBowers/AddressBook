@@ -4,11 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using AddressBook.Models;
 using AddressBook.Services;
 using AddressBook.Services.Interfaces;
+using AddressBook.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+//var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = ConnectionHelper.GetConnectionString(builder.Configuration);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

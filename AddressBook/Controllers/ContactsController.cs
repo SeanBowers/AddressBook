@@ -12,6 +12,7 @@ using AddressBook.Models;
 using AddressBook.Enums;
 using AddressBook.Services;
 using AddressBook.Services.Interfaces;
+using AddressBook.Models.ViewModels;
 
 namespace AddressBook.Controllers
 {
@@ -21,22 +22,26 @@ namespace AddressBook.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
         private readonly IAddressBookService _addressBookService;
+        private readonly IEmailService _emailService;
 
         public ContactsController(ApplicationDbContext context,
                                     UserManager<AppUser> userManager,
                                     IImageService imageService,
-                                    IAddressBookService addressBookService)
+                                    IAddressBookService addressBookService,
+                                    IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
             _addressBookService = addressBookService;
+            _emailService = emailService;
         }
 
         // GET: Contacts
         [Authorize]
-        public async Task<IActionResult> Index(int categoryId)
+        public async Task<IActionResult> Index(int categoryId, string swalMessage = null)
         {
+            ViewData["SwalMessage"] = swalMessage;
             string appUserId = _userManager.GetUserId(User);
 
             List<Contact> contacts = new List<Contact>();
@@ -46,7 +51,7 @@ namespace AddressBook.Controllers
                 .ThenInclude(c => c.Categories)
                 .FirstOrDefaultAsync(u => u.Id == appUserId);
 
-            if(categoryId == 0)
+            if (categoryId == 0)
             {
                 contacts = appUser.Contacts
                  .OrderBy(c => c.LastName)
@@ -85,7 +90,8 @@ namespace AddressBook.Controllers
                     .OrderBy(c => c.LastName)
                     .ThenBy(c => c.FirstName)
                     .ToList();
-            } else
+            }
+            else
             {
                 contacts = appUser.Contacts
                     .Where(c => c.FullName!.ToLower().Contains(searchString.ToLower()))
@@ -267,6 +273,52 @@ namespace AddressBook.Controllers
         private bool ContactExists(int id)
         {
             return (_context.Contact?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+
+        [Authorize]
+        public async Task<IActionResult> EmailContact(int id)
+        {
+            string appUserId = _userManager.GetUserId(User);
+            Contact contact = await _context.Contact
+                .Where(c => c.Id == id && c.AppUserId == appUserId)
+                .FirstOrDefaultAsync();
+            if (contact == null)
+            {
+                return NotFound();
+            }
+            EmailData emailData = new EmailData()
+            {
+                EmailAddress = contact.Email,
+                FirstName = contact.FirstName,
+                LastName = contact.LastName
+            };
+
+            EmailContactViewModel model = new EmailContactViewModel()
+            {
+                Contact = contact,
+                EmailData = emailData
+            };
+            return View(model);
+
+        }
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> EmailContact(EmailContactViewModel ecvm)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _emailService.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    return RedirectToAction("Index", "Contacts", new {swalMessage = "Email Sent!"});
+                }
+                catch
+                {
+                    return RedirectToAction("Index", "Contacts", new { swalMessage = "Error: Email Send Failed!" });
+                    throw;
+                }
+            }
+            return View(ecvm);
         }
     }
 }

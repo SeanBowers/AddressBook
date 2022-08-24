@@ -34,6 +34,7 @@ namespace AddressBook.Controllers
         public async Task<IActionResult> Index(string swalMessage = null)
         {
             ViewData["SwalMessage"] = swalMessage;
+
             string appUserId = _userManager.GetUserId(User);
 
             List<Category> categories = await _context.Category

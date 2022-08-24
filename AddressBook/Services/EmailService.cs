@@ -17,10 +17,6 @@ namespace AddressBook.Services
         {
             _mailSettings = mailSettings.Value;
         }
-        public Task SendEmailAsync(AppUser appuser, List<Contact> contacts, EmailData emailData)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {

@@ -5,6 +5,7 @@ namespace AddressBook.Services.Interfaces
 {
     public interface IEmailService : IEmailSender
     {
-        Task SendEmailAsync(AppUser appuser, List<Contact> contacts, EmailData emailData);
+        public Task SendEmailAsync(string email, string subject, string htmlMessage);
+
     }
 }

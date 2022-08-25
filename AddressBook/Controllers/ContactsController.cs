@@ -13,6 +13,7 @@ using AddressBook.Enums;
 using AddressBook.Services;
 using AddressBook.Services.Interfaces;
 using AddressBook.Models.ViewModels;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace AddressBook.Controllers
 {
@@ -22,19 +23,19 @@ namespace AddressBook.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly IImageService _imageService;
         private readonly IAddressBookService _addressBookService;
-        private readonly IEmailService _emailService;
+        private readonly IEmailSender _emailSender;
 
         public ContactsController(ApplicationDbContext context,
                                     UserManager<AppUser> userManager,
                                     IImageService imageService,
                                     IAddressBookService addressBookService,
-                                    IEmailService emailService)
+                                    IEmailSender emailSender)
         {
             _context = context;
             _userManager = userManager;
             _imageService = imageService;
             _addressBookService = addressBookService;
-            _emailService = emailService;
+            _emailSender = emailSender;
         }
 
         // GET: Contacts
@@ -309,7 +310,7 @@ namespace AddressBook.Controllers
             {
                 try
                 {
-                    await _emailService.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    await _emailSender.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
                     return RedirectToAction("Index", "Contacts", new {swalMessage = "Email Sent!"});
                 }
                 catch

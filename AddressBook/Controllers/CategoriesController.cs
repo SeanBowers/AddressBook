@@ -11,6 +11,7 @@ using AddressBook.Data;
 using AddressBook.Models;
 using AddressBook.Models.ViewModels;
 using AddressBook.Services.Interfaces;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace AddressBook.Controllers
 {
@@ -18,15 +19,15 @@ namespace AddressBook.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
-        private readonly IEmailService _emailService;
+        private readonly IEmailSender _emailSender;
 
         public CategoriesController(ApplicationDbContext context,
                                     UserManager<AppUser> userManager,
-                                    IEmailService emailService)
+                                    IEmailSender emailSender)
         {
             _context = context;
             _userManager = userManager;
-            _emailService = emailService;
+            _emailSender = emailSender;
         }
 
         // GET: Categories
@@ -215,7 +216,7 @@ namespace AddressBook.Controllers
             {
                 try
                 {
-                    await _emailService.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
+                    await _emailSender.SendEmailAsync(ecvm.EmailData.EmailAddress, ecvm.EmailData.Subject, ecvm.EmailData.Body);
                     return RedirectToAction("Index", "Categories", new { swalMessage = "Email Sent!" });
                 }
                 catch
